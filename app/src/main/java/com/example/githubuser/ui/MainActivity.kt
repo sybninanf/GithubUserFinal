@@ -4,29 +4,38 @@ package com.example.githubuser.ui
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.githubuser.Fav.FavoriteActivity
+import com.example.githubuser.R
+import com.example.githubuser.data.local.SettingPreference
 import com.example.githubuser.data.model.ResponseUser
 import com.example.githubuser.databinding.ActivityMainBinding
 import com.example.githubuser.detail.DetailActivity
+import com.example.githubuser.setting.SettingActivity
 import com.example.githubuser.util.Result
 
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val adapter by lazy{
-        UserAdapter {
+        UserAdapter {user ->
             Intent(this, DetailActivity::class.java).apply {
-                putExtra("username", it.login)
+                putExtra("item", user)
                 startActivity(this)
             }
         }
     }
 
-    private val viewModel by viewModels<MainViewModel> ()
+    private val viewModel by viewModels<MainViewModel> {
+        MainViewModel.Factory(SettingPreference(this))
+    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,6 +43,15 @@ class MainActivity : AppCompatActivity() {
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        viewModel.getTheme().observe(this) {
+            if (it) {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+            } else {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            }
+        }
+
 
         binding.rvHome.layoutManager = LinearLayoutManager(this)
         binding.rvHome.setHasFixedSize(true)
@@ -45,7 +63,7 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
 
-            override fun onQueryTextChange(newText: String?): Boolean = false
+            override fun onQueryTextChange(p0: String?): Boolean = false
         })
         viewModel.resultUser.observe(this){
             when (it) {
@@ -60,11 +78,29 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-
-
         viewModel.getUser()
-
-
             }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.favorite -> {
+                Intent(this, FavoriteActivity::class.java).apply {
+                    startActivity(this)
+                }
+            }
+            R.id.setting ->{
+                Intent(this, SettingActivity::class.java).apply {
+                    startActivity(this)
+                }
+            }
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
         }
 

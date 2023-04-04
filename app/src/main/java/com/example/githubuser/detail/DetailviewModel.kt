@@ -3,7 +3,10 @@ package com.example.githubuser.detail
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.githubuser.data.local.DbModul
+import com.example.githubuser.data.model.ResponseUser
 import com.example.githubuser.data.networks.ApiConfig
 import com.example.githubuser.util.Result
 import kotlinx.coroutines.flow.catch
@@ -12,10 +15,38 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 
-class DetailviewModel : ViewModel(){
+class DetailviewModel(private val db: DbModul) : ViewModel(){
     val resulDetailUser = MutableLiveData<Result>()
     val resulFollowersUser = MutableLiveData<Result>()
     val resulFollowingUser = MutableLiveData<Result>()
+    val resultSuccessFavorite = MutableLiveData<Boolean>()
+    val resultDeleteFavorite = MutableLiveData<Boolean>()
+
+    private var isFavorite = false
+    fun setFavorite(item: ResponseUser.Item?){
+        viewModelScope.launch {
+            item?.let {
+                if (isFavorite){
+                    db.userDao.delete(item)
+                    resultDeleteFavorite.value= true
+                }else{
+                    db.userDao.insert(item)
+                    resultSuccessFavorite.value= false
+                }
+            }
+            isFavorite = !isFavorite
+        }
+    }
+
+    fun findFavorite(id:Int, listenerFavorite:() -> Unit){
+        viewModelScope.launch {
+            val user = db.userDao.findById(id)
+            if (user !=null){
+              listenerFavorite
+                isFavorite = true            }
+        }
+    }
+
 
     fun getDetailUser(username : String) {
         viewModelScope.launch{
@@ -84,4 +115,7 @@ class DetailviewModel : ViewModel(){
                 }
         }
     }
-}
+    class Factory(private val db: DbModul): ViewModelProvider.NewInstanceFactory(){
+        override fun <T : ViewModel> create(modelClass: Class<T>): T = DetailviewModel(db) as T
+        }
+    }
