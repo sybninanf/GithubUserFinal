@@ -20,7 +20,7 @@ android {
         versionName "1.0"
 
         buildConfigField("String", "API_URL", '"https://api.github.com/"')
-        buildConfigField("String", "TOKEN", '"token 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"')
+        buildConfigField("String", "TOKEN", '"token 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"')
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 

@@ -13,8 +13,9 @@ interface UserDao {
     fun loadAll(): LiveData<MutableList<ResponseUser.Item>>
 
     @Query("SELECT * FROM User WHERE id LIKE :id LIMIT 1")
-    fun findById(id: Int): ResponseUser.Item
+    fun findById(id: Int): LiveData<ResponseUser.Item?>
 
     @Delete
     fun delete(user: ResponseUser.Item)
+
 }

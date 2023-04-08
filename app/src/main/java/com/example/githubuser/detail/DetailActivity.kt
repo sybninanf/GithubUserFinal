@@ -74,6 +74,7 @@ class DetailActivity : AppCompatActivity() {
 
         TabLayoutMediator(binding.tab, binding.viewpager) { tab, posisi ->
             tab.text = titleFragment[posisi]
+            viewModel.getFollowers(username)
         }.attach()
 
         binding.tab.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
@@ -94,22 +95,15 @@ class DetailActivity : AppCompatActivity() {
             }
 
         })
-        viewModel.getFollowers(username)
-        viewModel.resultSuccessFavorite.observe(this){
-            binding.btnFav.changeIconColor(R.color.red)
-        }
 
-        viewModel.resultDeleteFavorite.observe(this){
-            binding.btnFav.changeIconColor(R.color.white)
+        viewModel.isFavoriteUser(item?.id?: 0).observe(this) { isFavorite ->
+            if (isFavorite) binding.btnFav.changeIconColor(R.color.red)
+            else binding.btnFav.changeIconColor(R.color.white)
 
-        }
-
-        binding.btnFav.setOnClickListener {
-            viewModel.setFavorite(item)
-            binding.btnFav.changeIconColor(R.color.red)
-        }
-        viewModel.findFavorite(item?.id?: 0){
-            binding.btnFav.changeIconColor(R.color.red)
+            binding.btnFav.setOnClickListener {
+                if (isFavorite) viewModel.removeFromFavorite(item)
+                else viewModel.addToFavorite(item)
+            }
         }
     }
 

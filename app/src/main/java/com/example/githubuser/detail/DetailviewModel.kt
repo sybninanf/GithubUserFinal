@@ -1,10 +1,7 @@
 package com.example.githubuser.detail
 
 import android.util.Log
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.example.githubuser.data.local.DbModul
 import com.example.githubuser.data.model.ResponseUser
 import com.example.githubuser.data.networks.ApiConfig
@@ -47,6 +44,21 @@ class DetailviewModel(private val db: DbModul) : ViewModel(){
         }
     }
 
+    fun addToFavorite(item: ResponseUser.Item?) = viewModelScope.launch {
+        item?.let { user ->
+            db.userDao.insert(user)
+        }
+    }
+
+    fun removeFromFavorite(item: ResponseUser.Item?) = viewModelScope.launch {
+        item?.let { user ->
+            db.userDao.delete(user)
+        }
+    }
+
+    fun isFavoriteUser(id: Int): LiveData<Boolean> = db.userDao.findById(id).map {
+        it != null
+    }
 
     fun getDetailUser(username : String) {
         viewModelScope.launch{

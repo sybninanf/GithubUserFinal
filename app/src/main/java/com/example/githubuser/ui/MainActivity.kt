@@ -4,6 +4,7 @@ package com.example.githubuser.ui
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
@@ -24,8 +25,8 @@ import com.example.githubuser.util.Result
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    private val adapter by lazy{
-        UserAdapter {user ->
+    private val adapter by lazy {
+        UserAdapter { user ->
             Intent(this, DetailActivity::class.java).apply {
                 putExtra("item", user)
                 startActivity(this)
@@ -33,13 +34,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private val viewModel by viewModels<MainViewModel> {
-        MainViewModel.Factory(SettingPreference(this))
-    }
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val viewModel by viewModels<MainViewModel> {
+            MainViewModel.Factory(SettingPreference(this))
+        }
+
+        viewModel.getUser()
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -50,36 +53,37 @@ class MainActivity : AppCompatActivity() {
             } else {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
             }
-        }
 
+        }
 
         binding.rvHome.layoutManager = LinearLayoutManager(this)
         binding.rvHome.setHasFixedSize(true)
         binding.rvHome.adapter = adapter
 
-        binding.search.setOnQueryTextListener(object : SearchView.OnQueryTextListener{
+        binding.search.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(p0: String?): Boolean {
-                viewModel.getUser(p0.toString())
+                viewModel.searchGetUser(p0.toString())
                 return true
             }
 
             override fun onQueryTextChange(p0: String?): Boolean = false
         })
-        viewModel.resultUser.observe(this){
+        viewModel.resultUser.observe(this) {
             when (it) {
                 is Result.Success<*> -> {
                     adapter.setData(it.data as MutableList<ResponseUser.Item>)
+                    Log.e("MainActivity", it.data.size.toString())
+                    viewModel.getUser()
                 }
                 is Result.Error -> {
-                    Toast.makeText( this, it.exception.message.toString(), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, it.exception.message.toString(), Toast.LENGTH_SHORT).show()
                 }
                 is Result.Loading -> {
                     binding.progressBar.isVisible = it.isLoading
                 }
             }
         }
-        viewModel.getUser()
-            }
+    }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu, menu)
@@ -93,7 +97,7 @@ class MainActivity : AppCompatActivity() {
                     startActivity(this)
                 }
             }
-            R.id.setting ->{
+            R.id.setting -> {
                 Intent(this, SettingActivity::class.java).apply {
                     startActivity(this)
                 }
@@ -101,6 +105,5 @@ class MainActivity : AppCompatActivity() {
         }
         return super.onOptionsItemSelected(item)
     }
-
-        }
+}
 
